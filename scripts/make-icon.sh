@@ -9,7 +9,7 @@ SET="$WORK/AppIcon.iconset"
 rm -rf "$WORK"
 mkdir -p "$SET"
 
-xcrun swiftc -O -target arm64-apple-macos13 "$ROOT/scripts/tools/make-icon.swift" -o "$WORK/make-icon"
+xcrun swiftc -O -target "$(uname -m)-apple-macos13" "$ROOT/scripts/tools/make-icon.swift" -o "$WORK/make-icon"
 "$WORK/make-icon" "$ROOT/Resources/design/app-icon-source.webp" "$ROOT/Resources/design/app-icon-1024.png"
 
 for size in 16 32 128 256 512; do

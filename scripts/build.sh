@@ -14,21 +14,32 @@ APP="$DIST/$NAME.app"
 DMG="$DIST/$NAME.dmg"
 ZIP="$DIST/$NAME.zip"
 RELEASE="$DIST/release"
-TARGET="arm64-apple-macos13"
-SWIFTC="xcrun swiftc -O -target $TARGET"
+# Binari universali: arm64 e x86_64 (Mac Intel). Gli strumenti di build girano sull'architettura di questo Mac
+HOST_TARGET="$(uname -m)-apple-macos13"
+ARCHS="arm64 x86_64"
 
 rm -rf "$BUILD" "$DIST"
 mkdir -p "$BUILD" "$DIST"
 
-$SWIFTC -module-name SMCKit -parse-as-library \
-  -emit-module -emit-module-path "$BUILD/SMCKit.swiftmodule" \
-  -emit-library -static -o "$BUILD/libSMCKit.a" "$ROOT"/Sources/SMCKit/*.swift
+for ARCH in $ARCHS; do
+  SWIFTC="xcrun swiftc -O -target $ARCH-apple-macos13"
+  OUT="$BUILD/$ARCH"
+  mkdir -p "$OUT"
 
-$SWIFTC -I "$BUILD" -L "$BUILD" -lSMCKit -framework IOKit \
-  "$ROOT/Sources/batteryguard-helper/main.swift" -o "$BUILD/batteryguard-helper"
+  $SWIFTC -module-name SMCKit -parse-as-library \
+    -emit-module -emit-module-path "$OUT/SMCKit.swiftmodule" \
+    -emit-library -static -o "$OUT/libSMCKit.a" "$ROOT"/Sources/SMCKit/*.swift
 
-$SWIFTC -module-name BatteryGuard -parse-as-library -I "$BUILD" -L "$BUILD" -lSMCKit -framework IOKit \
-  "$ROOT"/Sources/BatteryGuard/*.swift -o "$BUILD/BatteryGuard"
+  $SWIFTC -I "$OUT" -L "$OUT" -lSMCKit -framework IOKit \
+    "$ROOT/Sources/batteryguard-helper/main.swift" -o "$OUT/batteryguard-helper"
+
+  $SWIFTC -module-name BatteryGuard -parse-as-library -I "$OUT" -L "$OUT" -lSMCKit -framework IOKit \
+    "$ROOT"/Sources/BatteryGuard/*.swift -o "$OUT/BatteryGuard"
+done
+
+for BIN in BatteryGuard batteryguard-helper; do
+  lipo -create -output "$BUILD/$BIN" "$BUILD"/arm64/"$BIN" "$BUILD"/x86_64/"$BIN"
+done
 
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BUILD/BatteryGuard" "$BUILD/batteryguard-helper" "$APP/Contents/MacOS/"
@@ -60,7 +71,7 @@ if [ ! -x "$VENV/bin/dmgbuild" ]; then
   python3 -m venv "$VENV"
   "$VENV/bin/pip" install --quiet "dmgbuild==1.6.7"
 fi
-xcrun swiftc -O -target $TARGET "$ROOT/scripts/tools/make-dmg-background.swift" -o "$BUILD/make-dmg-background"
+xcrun swiftc -O -target "$HOST_TARGET" "$ROOT/scripts/tools/make-dmg-background.swift" -o "$BUILD/make-dmg-background"
 # Produce background.png e background@2x.png: dmgbuild li unisce in un TIFF multi-risoluzione
 "$BUILD/make-dmg-background" "$BUILD/background"
 "$VENV/bin/dmgbuild" -s "$ROOT/scripts/dmg-settings.py" \

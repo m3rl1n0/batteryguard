@@ -4,7 +4,7 @@ import SMCKit
 let hysteresis = 2
 // Ciclo breve: la soglia cambiata dall'app viene applicata entro pochi secondi
 let pollInterval: TimeInterval = 5
-let probeKeys = ["CHTE", "CH0B", "CH0C", "CHIE", "CH0I", "CH0J", "BUIC", "B0RM"]
+let probeKeys = ["CHTE", "CH0B", "CH0C", "BCLM", "CHIE", "CH0I", "CH0J", "BUIC", "B0RM"]
 
 setvbuf(stdout, nil, _IOLBF, 0)
 

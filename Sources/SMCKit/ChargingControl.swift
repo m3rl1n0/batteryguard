@@ -5,7 +5,7 @@ import Foundation
 public enum ChargingScheme: String {
     /// Firmware Apple Silicon recenti (macOS 15+): una chiave a 4 byte
     case chte = "CHTE"
-    /// Firmware precedenti: due chiavi a 1 byte che vanno scritte insieme
+    /// Firmware precedenti e Mac Intel con chip T2: due chiavi a 1 byte che vanno scritte insieme
     case ch0bc = "CH0B+CH0C"
 
     var keys: [String] {

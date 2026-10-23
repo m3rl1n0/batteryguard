@@ -1,12 +1,12 @@
 #!/bin/bash
 # Installa o aggiorna BatteryGuard dall'ultima release su GitHub.
-# Uso: curl -fsSL https://github.com/alessiocardelli/batteryguard/releases/latest/download/install.sh | bash
+# Uso: curl -fsSL https://github.com/m3rl1n0/batteryguard/releases/latest/download/install.sh | bash
 #
 # Non tocca il servizio root: l'attivazione resta all'app (password una volta).
 
 set -euo pipefail
 
-REPO="alessiocardelli/batteryguard"
+REPO="m3rl1n0/batteryguard"
 APP_NAME="BatteryGuard"
 BUNDLE_ID="com.alessiocardelli.batteryguard"
 DEST="/Applications/${APP_NAME}.app"
@@ -16,10 +16,6 @@ fail() { printf 'Error: %s\n' "$*" >&2; exit 1; }
 
 check_system() {
   [ "$(uname -s)" = "Darwin" ] || fail "BatteryGuard runs on macOS only."
-
-  # hw.optional.arm64 vale 1 anche se il Terminale gira sotto Rosetta, uname -m no
-  [ "$(sysctl -n hw.optional.arm64 2>/dev/null || echo 0)" = "1" ] \
-    || fail "BatteryGuard needs a Mac with Apple Silicon (M1 or later)."
 
   local version major
   version="$(sw_vers -productVersion)"

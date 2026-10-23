@@ -76,6 +76,22 @@ func probe() {
     }
 }
 
+/// Elenca le chiavi SMC di carica e batteria (CH*, BC*, BF*, BN*, BU*, B0*) con tipo e valore
+func listKeys() {
+    let smc: SMC
+    do { smc = try SMC() } catch { fail("\(error)") }
+    let names: [String]
+    do { names = try smc.allKeys() } catch { fail("\(error)") }
+    for name in names where ["CH", "BC", "BF", "BN", "BU", "B0"].contains(where: { name.hasPrefix($0) }) {
+        do {
+            let value = try smc.read(name)
+            print("\(name)  tipo=\(value.type)  byte=\(value.bytes.count)  valore=\(value.hex)")
+        } catch {
+            print("\(name)  \(error)")
+        }
+    }
+}
+
 func status() {
     let control = makeControl()
     let limit = LimitConfig.read() ?? LimitConfig.defaultLimit
@@ -162,6 +178,7 @@ func runDaemon() -> Never {
 let usage = """
 uso: batteryguard-helper <comando>
   probe              legge le chiavi SMC di ricarica (non serve root)
+  keys               elenca le chiavi SMC di carica e batteria (meglio con sudo)
   status             stato batteria, ricarica e soglia
   daemon             ciclo di controllo (root, lanciato da launchd)
   enable-charging    riabilita la ricarica (root)
@@ -170,6 +187,7 @@ uso: batteryguard-helper <comando>
 
 switch CommandLine.arguments.dropFirst().first {
 case "probe": probe()
+case "keys": listKeys()
 case "status": status()
 case "daemon": runDaemon()
 case "enable-charging": setCharging(true)

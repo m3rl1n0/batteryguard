@@ -41,6 +41,7 @@ public final class SMC {
         static let keyInfoType = 32
         static let result = 40
         static let command = 42
+        static let index = 44
         static let bytes = 48
     }
 
@@ -48,6 +49,7 @@ public final class SMC {
         case readBytes = 5
         case writeBytes = 6
         case readKeyInfo = 9
+        case readIndex = 8
     }
 
     private static let structSize = 80
@@ -77,6 +79,20 @@ public final class SMC {
         let output = try call(input, key: key)
         let bytes = Array(output[Offset.bytes..<(Offset.bytes + Int(size))])
         return SMCValue(key: key, type: string(fromFourCC: type), bytes: bytes)
+    }
+
+    /// Nomi di tutte le chiavi SMC, nell'ordine dell'indice (la chiave #KEY ne contiene il numero).
+    public func allKeys() throws -> [String] {
+        let count = try read("#KEY").bytes.reduce(0) { ($0 << 8) | Int($1) }
+        var names: [String] = []
+        for index in 0..<count {
+            var input = [UInt8](repeating: 0, count: Self.structSize)
+            input[Offset.command] = Command.readIndex.rawValue
+            put(UInt32(index), at: Offset.index, in: &input)
+            guard let output = try? call(input, key: "#\(index)") else { continue }
+            names.append(string(fromFourCC: get(at: Offset.key, in: output)))
+        }
+        return names
     }
 
     public func exists(_ key: String) -> Bool {

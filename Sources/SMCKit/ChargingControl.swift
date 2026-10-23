@@ -7,11 +7,15 @@ public enum ChargingScheme: String {
     case chte = "CHTE"
     /// Firmware precedenti e Mac Intel con chip T2: due chiavi a 1 byte che vanno scritte insieme
     case ch0bc = "CH0B+CH0C"
+    /// Mac Intel (anche con chip T2) senza CH0B/CH0C: BCLM è la carica massima in percentuale.
+    /// Il firmware smette di caricare quando la batteria la raggiunge; 100 vuol dire nessun limite
+    case bclm = "BCLM"
 
     var keys: [String] {
         switch self {
         case .chte: return ["CHTE"]
         case .ch0bc: return ["CH0B", "CH0C"]
+        case .bclm: return ["BCLM"]
         }
     }
 
@@ -19,6 +23,9 @@ public enum ChargingScheme: String {
         switch self {
         case .chte: return enabled ? [0x00, 0x00, 0x00, 0x00] : [0x01, 0x00, 0x00, 0x00]
         case .ch0bc: return enabled ? [0x00] : [0x02]
+        // Il servizio blocca solo con la batteria già alla soglia (almeno 50%): un valore fisso al
+        // minimo consentito la ferma subito, qualunque sia la soglia scelta nell'app
+        case .bclm: return enabled ? [100] : [50]
         }
     }
 }
@@ -35,13 +42,16 @@ public final class ChargingControl {
             scheme = .chte
         } else if smc.exists("CH0B") && smc.exists("CH0C") {
             scheme = .ch0bc
+        } else if smc.exists("BCLM") {
+            scheme = .bclm
         } else {
-            throw SMCError.keyNotFound("CHTE / CH0B / CH0C")
+            throw SMCError.keyNotFound("CHTE / CH0B / CH0C / BCLM")
         }
     }
 
     public func isChargingEnabled() throws -> Bool {
         let value = try smc.read(scheme.keys[0])
+        if scheme == .bclm { return (value.bytes.first ?? 0) >= 100 }
         return value.bytes.allSatisfy { $0 == 0 }
     }
 

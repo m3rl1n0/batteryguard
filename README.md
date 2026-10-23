@@ -48,7 +48,7 @@ macOS may keep an entry from "Unknown Developer" under **System Settings > Gener
 ## Known limits
 
 - While the Mac is asleep the service can't act, so the battery may charge above the limit.
-- Intel support is experimental: it relies on the SMC keys `CH0B`/`CH0C`, and has not been verified on every model. Run `batteryguard-helper probe` to see which charging keys your Mac exposes.
+- Intel support is experimental: it relies on the SMC keys `CH0B`/`CH0C` or `BCLM`, and has not been verified on every model. Run `batteryguard-helper probe` to see which charging keys your Mac exposes.
 
 ## Build
 

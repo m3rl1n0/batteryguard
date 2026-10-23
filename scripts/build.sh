@@ -69,7 +69,7 @@ ditto -c -k --keepParent "$APP" "$ZIP"
 VENV="$ROOT/.build/dmgbuild-venv"
 if [ ! -x "$VENV/bin/dmgbuild" ]; then
   python3 -m venv "$VENV"
-  "$VENV/bin/pip" install --quiet "dmgbuild==1.6.7"
+  "$VENV/bin/pip" install --quiet "dmgbuild>=1.6.5,<1.7"
 fi
 xcrun swiftc -O -target "$HOST_TARGET" "$ROOT/scripts/tools/make-dmg-background.swift" -o "$BUILD/make-dmg-background"
 # Produce background.png e background@2x.png: dmgbuild li unisce in un TIFF multi-risoluzione
